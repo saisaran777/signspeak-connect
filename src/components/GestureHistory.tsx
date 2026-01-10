@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, VolumeX, Trash2, Clock } from 'lucide-react';
+import { Volume2, VolumeX, Trash2, Clock, Copy, Check, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { toast } from 'sonner';
 
 export interface GestureHistoryItem {
   id: string;
@@ -13,16 +15,52 @@ export interface GestureHistoryItem {
 interface GestureHistoryProps {
   history: GestureHistoryItem[];
   onClear: () => void;
+  onReplay?: (item: GestureHistoryItem) => void;
 }
 
-const GestureHistory = ({ history, onClear }: GestureHistoryProps) => {
+const GestureHistory = ({ history, onClear, onReplay }: GestureHistoryProps) => {
   const { speak, isSpeaking, cancel } = useSpeechSynthesis();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
 
-  const handleSpeak = (text: string) => {
-    if (isSpeaking) {
+  const handleSpeak = (item: GestureHistoryItem) => {
+    if (isSpeaking && speakingId === item.id) {
       cancel();
+      setSpeakingId(null);
     } else {
-      speak(text);
+      speak(item.description);
+      setSpeakingId(item.id);
+    }
+  };
+
+  const handleCopy = async (item: GestureHistoryItem) => {
+    try {
+      await navigator.clipboard.writeText(item.description);
+      setCopiedId(item.id);
+      toast.success('Copied to clipboard!');
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error('Failed to copy');
+    }
+  };
+
+  const handleReplay = (item: GestureHistoryItem) => {
+    if (onReplay) {
+      onReplay(item);
+    }
+    // Also speak when replaying
+    speak(item.description);
+    setSpeakingId(item.id);
+    toast.success(`Replaying: ${item.description}`);
+  };
+
+  const handleCopyAll = async () => {
+    const allText = history.map(item => item.description).join('\n');
+    try {
+      await navigator.clipboard.writeText(allText);
+      toast.success('Copied all gestures to clipboard!');
+    } catch {
+      toast.error('Failed to copy');
     }
   };
 
@@ -50,17 +88,30 @@ const GestureHistory = ({ history, onClear }: GestureHistoryProps) => {
           </div>
         </div>
         
-        {history.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClear}
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Clear
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {history.length > 0 && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyAll}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Copy className="w-4 h-4 mr-1" />
+                Copy All
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClear}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Clear
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* History list */}
@@ -85,7 +136,7 @@ const GestureHistory = ({ history, onClear }: GestureHistoryProps) => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors group"
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-xl gradient-bg-primary text-primary-foreground font-display font-bold">
@@ -99,18 +150,47 @@ const GestureHistory = ({ history, onClear }: GestureHistoryProps) => {
                     </div>
                   </div>
                   
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleSpeak(item.description)}
-                    className={`rounded-full ${isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
-                  >
-                    {isSpeaking ? (
-                      <VolumeX className="w-5 h-5" />
-                    ) : (
-                      <Volume2 className="w-5 h-5" />
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleReplay(item)}
+                      className="rounded-full text-muted-foreground hover:text-accent"
+                      title="Replay"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleCopy(item)}
+                      className="rounded-full text-muted-foreground hover:text-primary"
+                      title="Copy"
+                    >
+                      {copiedId === item.id ? (
+                        <Check className="w-4 h-4 text-success" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleSpeak(item)}
+                      className={`rounded-full ${
+                        speakingId === item.id && isSpeaking ? 'text-primary' : 'text-muted-foreground'
+                      }`}
+                      title="Speak"
+                    >
+                      {speakingId === item.id && isSpeaking ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
                 </motion.li>
               ))}
             </AnimatePresence>
