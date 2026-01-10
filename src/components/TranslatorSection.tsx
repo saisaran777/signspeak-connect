@@ -1,12 +1,14 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Hand, Mic, ArrowLeftRight, Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Hand, Mic } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CameraView from './CameraView';
 import GestureHistory, { GestureHistoryItem } from './GestureHistory';
 import SpeechControls from './SpeechControls';
 import SpeechToSign from './SpeechToSign';
+import SentenceBuilder from './SentenceBuilder';
+import TutorialModal from './TutorialModal';
+import PrivacyBadge from './PrivacyBadge';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 const TranslatorSection = () => {
@@ -15,6 +17,7 @@ const TranslatorSection = () => {
   const [isSpeechActive, setIsSpeechActive] = useState(false);
   const [gestureHistory, setGestureHistory] = useState<GestureHistoryItem[]>([]);
   const [lastDetectedText, setLastDetectedText] = useState('');
+  const [currentGesture, setCurrentGesture] = useState<string | null>(null);
   const [autoSpeak, setAutoSpeak] = useState(true);
   
   const { speak } = useSpeechSynthesis();
@@ -23,8 +26,8 @@ const TranslatorSection = () => {
   const handleGestureDetected = useCallback((gesture: string | null, description: string) => {
     if (gesture && description) {
       setLastDetectedText(description);
+      setCurrentGesture(gesture);
       
-      // Add to history
       const newItem: GestureHistoryItem = {
         id: `gesture-${historyIdRef.current++}`,
         gesture,
@@ -32,9 +35,8 @@ const TranslatorSection = () => {
         timestamp: new Date(),
       };
       
-      setGestureHistory(prev => [newItem, ...prev].slice(0, 50)); // Keep last 50 items
+      setGestureHistory(prev => [newItem, ...prev].slice(0, 50));
       
-      // Auto-speak if enabled
       if (autoSpeak) {
         speak(description);
       }
@@ -44,6 +46,12 @@ const TranslatorSection = () => {
   const handleClearHistory = useCallback(() => {
     setGestureHistory([]);
     setLastDetectedText('');
+    setCurrentGesture(null);
+  }, []);
+
+  const handleReplay = useCallback((item: GestureHistoryItem) => {
+    setCurrentGesture(item.gesture);
+    setLastDetectedText(item.description);
   }, []);
 
   return (
@@ -55,14 +63,20 @@ const TranslatorSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center max-w-2xl mx-auto mb-12"
+          className="text-center max-w-2xl mx-auto mb-8"
         >
           <h2 className="text-4xl lg:text-5xl font-display font-bold text-foreground mb-4">
             Start <span className="gradient-text">Translating</span>
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground mb-6">
             Choose your translation mode and start communicating instantly.
           </p>
+          
+          {/* Help & Privacy */}
+          <div className="flex items-center justify-center gap-3">
+            <TutorialModal />
+            <PrivacyBadge />
+          </div>
         </motion.div>
 
         {/* Mode selector */}
@@ -96,24 +110,13 @@ const TranslatorSection = () => {
                     onToggle={() => setIsCameraActive(!isCameraActive)}
                   />
                   
-                  {/* Info banner */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-6 flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/20"
-                  >
-                    <Info className="w-5 h-5 text-info flex-shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium text-foreground mb-1">Tips for best results:</p>
-                      <ul className="text-muted-foreground space-y-1">
-                        <li>• Ensure good lighting on your hands</li>
-                        <li>• Position your hand clearly in frame</li>
-                        <li>• Hold each gesture steady for 1-2 seconds</li>
-                        <li>• Keep a plain background when possible</li>
-                      </ul>
-                    </div>
-                  </motion.div>
+                  {/* Sentence Builder */}
+                  <div className="mt-6">
+                    <SentenceBuilder
+                      currentGesture={currentGesture}
+                      onClear={() => setCurrentGesture(null)}
+                    />
+                  </div>
                 </div>
 
                 {/* Controls and history */}
@@ -126,6 +129,7 @@ const TranslatorSection = () => {
                   <GestureHistory
                     history={gestureHistory}
                     onClear={handleClearHistory}
+                    onReplay={handleReplay}
                   />
                 </div>
               </div>
