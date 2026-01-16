@@ -10,9 +10,10 @@ interface CameraViewProps {
   isActive: boolean;
   onToggle: () => void;
   autoStart?: boolean;
+  onStatsUpdate?: (stats: { fps: number; confidence: number; handDetected: boolean }) => void;
 }
 
-const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true }: CameraViewProps) => {
+const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, onStatsUpdate }: CameraViewProps) => {
   const [currentGesture, setCurrentGesture] = useState<string | null>(null);
   const [gestureStability, setGestureStability] = useState(0);
   const [confidence, setConfidence] = useState(0);
@@ -32,9 +33,19 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true }:
     frameCountRef.current++;
     const now = Date.now();
     if (now - lastFpsTimeRef.current >= 1000) {
-      setFps(frameCountRef.current);
+      const currentFps = frameCountRef.current;
+      setFps(currentFps);
       frameCountRef.current = 0;
       lastFpsTimeRef.current = now;
+      
+      // Report stats to parent
+      if (onStatsUpdate) {
+        onStatsUpdate({
+          fps: currentFps,
+          confidence,
+          handDetected,
+        });
+      }
     }
 
     if (landmarks.length === 0) {

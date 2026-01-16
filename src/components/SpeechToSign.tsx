@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, Hand, Loader2, AlertCircle, Play, RotateCcw, Copy, Check, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Volume2, Hand, Loader2, AlertCircle, Play, RotateCcw, Copy, Check, Sparkles, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { useSpeechTranscript } from '@/hooks/useSpeechTranscript';
 import { ASL_ALPHABET } from '@/lib/signLanguageData';
 import { toast } from 'sonner';
 
@@ -11,14 +12,18 @@ interface SpeechToSignProps {
   isActive: boolean;
   onToggle: () => void;
   autoStart?: boolean;
+  sessionId?: string | null;
 }
 
-const SpeechToSign = ({ isActive, onToggle, autoStart = true }: SpeechToSignProps) => {
+const SpeechToSign = ({ isActive, onToggle, autoStart = true, sessionId = null }: SpeechToSignProps) => {
   const [currentLetters, setCurrentLetters] = useState<string[]>([]);
   const [activeLetterIndex, setActiveLetterIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [autoStarted, setAutoStarted] = useState(false);
+  const [savedToCloud, setSavedToCloud] = useState(false);
+
+  const { saveTranscript } = useSpeechTranscript();
 
   const {
     isListening,
@@ -105,6 +110,18 @@ const SpeechToSign = ({ isActive, onToggle, autoStart = true }: SpeechToSignProp
       setTimeout(() => setCopied(false), 2000);
     }
   }, [transcript, interimTranscript]);
+
+  const handleSaveToCloud = useCallback(async () => {
+    const text = transcript + interimTranscript;
+    if (text && currentLetters.length > 0) {
+      const result = await saveTranscript(sessionId, text, currentLetters);
+      if (result) {
+        setSavedToCloud(true);
+        toast.success('Transcript saved to cloud!');
+        setTimeout(() => setSavedToCloud(false), 2000);
+      }
+    }
+  }, [transcript, interimTranscript, currentLetters, sessionId, saveTranscript]);
 
   const handleSpeak = useCallback(() => {
     const text = transcript + interimTranscript;
@@ -210,6 +227,15 @@ const SpeechToSign = ({ isActive, onToggle, autoStart = true }: SpeechToSignProp
                   disabled={isSpeaking}
                 >
                   <Volume2 className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={handleSaveToCloud}
+                  title="Save to cloud"
+                >
+                  {savedToCloud ? <Check className="w-4 h-4 text-success" /> : <Database className="w-4 h-4" />}
                 </Button>
                 <Button 
                   variant="ghost" 
