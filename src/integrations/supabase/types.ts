@@ -14,7 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gesture_logs: {
+        Row: {
+          confidence: number | null
+          detected_at: string
+          gesture_description: string | null
+          gesture_name: string
+          id: string
+          session_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          detected_at?: string
+          gesture_description?: string | null
+          gesture_name: string
+          id?: string
+          session_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          detected_at?: string
+          gesture_description?: string | null
+          gesture_name?: string
+          id?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gesture_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gesture_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gesture_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          session_name: string | null
+          started_at: string
+          total_gestures: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          session_name?: string | null
+          started_at?: string
+          total_gestures?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          session_name?: string | null
+          started_at?: string
+          total_gestures?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      speech_transcripts: {
+        Row: {
+          converted_signs: string[] | null
+          created_at: string
+          id: string
+          original_text: string
+          session_id: string | null
+        }
+        Insert: {
+          converted_signs?: string[] | null
+          created_at?: string
+          id?: string
+          original_text: string
+          session_id?: string | null
+        }
+        Update: {
+          converted_signs?: string[] | null
+          created_at?: string
+          id?: string
+          original_text?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speech_transcripts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gesture_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

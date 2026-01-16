@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Hand, Volume2, Mic, ArrowRight, Sparkles, Users, Globe } from 'lucide-react';
+import { Hand, Volume2, Mic, ArrowRight, Sparkles, Users, Globe, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface HeroSectionProps {
@@ -33,8 +33,11 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors">About</a>
+            <a href="#translator" className="text-muted-foreground hover:text-foreground transition-colors">Translator</a>
+            <a href="/backend" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <Database className="w-4 h-4" />
+              Dashboard
+            </a>
           </nav>
         </motion.div>
 
