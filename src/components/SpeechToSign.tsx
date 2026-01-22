@@ -59,7 +59,7 @@ const SpeechToSign = ({ isActive, onToggle, autoStart = true, sessionId = null }
     }
   }, [transcript, interimTranscript, isAnimating]);
 
-  // Animate through letters with proper timing
+  // Animate through letters with slower timing for better visibility
   useEffect(() => {
     if (isAnimating && currentLetters.length > 0) {
       const interval = setInterval(() => {
@@ -70,7 +70,7 @@ const SpeechToSign = ({ isActive, onToggle, autoStart = true, sessionId = null }
           }
           return prev + 1;
         });
-      }, 800);
+      }, 1500); // Slower speed: 1.5 seconds per letter
       return () => clearInterval(interval);
     }
   }, [isAnimating, currentLetters.length]);

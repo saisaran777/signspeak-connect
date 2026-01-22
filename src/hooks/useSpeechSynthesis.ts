@@ -9,7 +9,7 @@ interface UseSpeechSynthesisOptions {
 
 export const useSpeechSynthesis = ({
   lang = 'en-US',
-  rate = 1,
+  rate = 0.8, // Slower default rate for better clarity
   pitch = 1,
   volume = 1,
 }: UseSpeechSynthesisOptions = {}) => {
