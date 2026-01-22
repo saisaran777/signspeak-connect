@@ -99,28 +99,34 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
 
   // Auto-start camera when component mounts and autoStart is true
   useEffect(() => {
-    if (autoStart && !autoStartedRef.current && !isActive) {
+    if (autoStart && !autoStartedRef.current) {
       autoStartedRef.current = true;
-      // Small delay to ensure component is fully mounted
+      // Start camera directly after a small delay
       const timer = setTimeout(() => {
-        console.log('Auto-starting camera...');
-        onToggle(); // This sets isActive to true
-      }, 300);
+        console.log('Auto-starting camera directly...');
+        startCamera();
+        if (!isActive) {
+          onToggle();
+        }
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [autoStart, isActive, onToggle]);
+  }, [autoStart, startCamera, isActive, onToggle]);
 
-  // Start/stop camera based on isActive state
+  // Handle manual toggle
   useEffect(() => {
-    if (isActive && !isRunning && !isLoading && !error) {
-      console.log('Starting camera...');
+    // Only handle manual toggles after autostart has happened
+    if (!autoStartedRef.current) return;
+    
+    if (isActive && !isRunning && !isLoading) {
+      console.log('Starting camera from manual toggle...');
       startCamera();
     } else if (!isActive && isRunning) {
       console.log('Stopping camera...');
       stopCamera();
       setCurrentGesture(null);
     }
-  }, [isActive, isRunning, isLoading, error, startCamera, stopCamera]);
+  }, [isActive, isRunning, isLoading, startCamera, stopCamera]);
 
   return (
     <div className="relative w-full aspect-video max-w-4xl mx-auto">
@@ -147,7 +153,7 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
 
         {/* Status overlays */}
         <AnimatePresence>
-          {!isActive && (
+          {!isActive && !isLoading && !isRunning && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -175,7 +181,10 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
                   Start the camera to begin real-time sign language detection
                 </p>
                 <Button 
-                  onClick={onToggle}
+                  onClick={() => {
+                    startCamera();
+                    onToggle();
+                  }}
                   size="lg"
                   className="gradient-bg-primary shadow-glow text-lg px-8 py-6"
                 >
@@ -186,7 +195,7 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
             </motion.div>
           )}
 
-          {isLoading && isActive && (
+          {(isLoading || (isActive && !isRunning && !error)) && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -201,8 +210,12 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
                   className="absolute inset-0 rounded-full border-2 border-dashed border-primary/30"
                 />
               </div>
-              <h3 className="text-xl font-display font-bold text-foreground mt-6 mb-2">Initializing AI...</h3>
-              <p className="text-muted-foreground">Loading MediaPipe hand detection model</p>
+              <h3 className="text-xl font-display font-bold text-foreground mt-6 mb-2">
+                {isLoading ? 'Initializing AI...' : 'Starting Camera...'}
+              </h3>
+              <p className="text-muted-foreground">
+                {isLoading ? 'Loading MediaPipe hand detection model' : 'Requesting camera access'}
+              </p>
               <div className="flex gap-1 mt-4">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <motion.div
