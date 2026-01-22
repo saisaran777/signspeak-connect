@@ -17,7 +17,7 @@ import { useGestureSession } from '@/hooks/useGestureSession';
 
 const TranslatorSection = () => {
   const [mode, setMode] = useState<'sign-to-speech' | 'speech-to-sign'>('sign-to-speech');
-  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(true); // Start with camera active
   const [isSpeechActive, setIsSpeechActive] = useState(false);
   const [gestureHistory, setGestureHistory] = useState<GestureHistoryItem[]>([]);
   const [lastDetectedText, setLastDetectedText] = useState('');

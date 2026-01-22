@@ -99,20 +99,28 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
 
   // Auto-start camera when component mounts and autoStart is true
   useEffect(() => {
-    if (autoStart && !autoStartedRef.current && !isRunning && !isLoading) {
+    if (autoStart && !autoStartedRef.current && !isActive) {
       autoStartedRef.current = true;
-      onToggle(); // This sets isActive to true
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        console.log('Auto-starting camera...');
+        onToggle(); // This sets isActive to true
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  }, [autoStart, isRunning, isLoading, onToggle]);
+  }, [autoStart, isActive, onToggle]);
 
+  // Start/stop camera based on isActive state
   useEffect(() => {
-    if (isActive && !isRunning && !isLoading) {
+    if (isActive && !isRunning && !isLoading && !error) {
+      console.log('Starting camera...');
       startCamera();
     } else if (!isActive && isRunning) {
+      console.log('Stopping camera...');
       stopCamera();
       setCurrentGesture(null);
     }
-  }, [isActive, isRunning, isLoading, startCamera, stopCamera]);
+  }, [isActive, isRunning, isLoading, error, startCamera, stopCamera]);
 
   return (
     <div className="relative w-full aspect-video max-w-4xl mx-auto">
