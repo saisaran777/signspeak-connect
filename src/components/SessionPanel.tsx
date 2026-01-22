@@ -147,20 +147,38 @@ const SessionPanel = ({
                 <div className="flex gap-3">
                   {!session ? (
                     <Button
-                      onClick={onStartSession}
+                      onClick={() => {
+                        console.log('Starting session...');
+                        onStartSession();
+                      }}
                       disabled={isLoading}
-                      className="flex-1 gradient-bg-primary text-primary-foreground shadow-glow"
+                      className="flex-1 gradient-bg-primary text-primary-foreground shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                       size="lg"
                     >
-                      <Play className="w-5 h-5 mr-2" />
-                      Start Session
-                      <Sparkles className="w-4 h-4 ml-2 opacity-70" />
+                      {isLoading ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="mr-2"
+                          >
+                            <Activity className="w-5 h-5" />
+                          </motion.div>
+                          Starting...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-5 h-5 mr-2" />
+                          Start Session
+                          <Sparkles className="w-4 h-4 ml-2 opacity-70" />
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <Button
                       onClick={onEndSession}
                       variant="destructive"
-                      className="flex-1"
+                      className="flex-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                       size="lg"
                     >
                       <Square className="w-5 h-5 mr-2" />
@@ -171,7 +189,8 @@ const SessionPanel = ({
                   <Button
                     variant="outline"
                     size="lg"
-                    className="px-4"
+                    className="px-4 hover:bg-muted transition-colors"
+                    onClick={() => window.location.href = '/backend'}
                   >
                     <History className="w-5 h-5" />
                   </Button>
