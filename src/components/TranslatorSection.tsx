@@ -12,6 +12,7 @@ import PrivacyBadge from './PrivacyBadge';
 import QualityIndicator from './QualityIndicator';
 import SessionPanel from './SessionPanel';
 import AdvancedStats from './AdvancedStats';
+import ASLAlphabetChart from './ASLAlphabetChart';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useGestureSession } from '@/hooks/useGestureSession';
 
@@ -217,6 +218,9 @@ const TranslatorSection = () => {
                       currentGesture={currentGesture}
                       onClear={() => setCurrentGesture(null)}
                     />
+
+                    {/* ASL Alphabet Reference Chart */}
+                    <ASLAlphabetChart />
                   </div>
 
                   {/* Controls and history */}
