@@ -118,7 +118,7 @@ const CameraView = ({ onGestureDetected, isActive, onToggle, autoStart = true, o
 
   return (
     <div className="relative w-full aspect-video max-w-4xl mx-auto">
-      <div className="camera-frame bg-card relative overflow-hidden rounded-2xl border-2 border-primary/20">
+      <div className="camera-frame bg-card relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-lg">
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
